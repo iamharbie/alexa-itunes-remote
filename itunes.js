@@ -1,5 +1,6 @@
-#!/usr/bin/env node
-var SERVER = { pair: '09B63545F31CF5C1', serviceName: '4E6D0DFFC6C0CE2F' };
+//var SERVER = { pair: '09B63545F31CF5C1', serviceName: '4E6D0DFFC6C0CE2F' }; // mikemac
+var SERVER = { pair: 'FEEDB511B2ABFB18', serviceName: '2D64252F6F8B15B1' }; // projector shelf
+
 var client = require('dacp-client')(SERVER);//(SERVER);
 
 client.on('passcode', function(passcode) {

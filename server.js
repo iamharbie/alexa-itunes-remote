@@ -1,6 +1,8 @@
+#!/usr/bin/env node
 var itunes = require('./itunes');
 var dns = require('dns');
 var app = (require('express'))();
+var url = require('url');
 
 var port = 8888;
 var host;
@@ -20,8 +22,11 @@ app.get('/', function (req, res) {
     console.log(url_parts.query);
     var json = url_parts.query && url_parts.query.json != undefined && url_parts.query.json != 'undefined' ? JSON.parse(url_parts.query.json) : {};
 
-    // if (json.name == "PlaySong")
-    //   playSong(json.slots.Title.value, res);
+    if (json.name == "PlaySong")
+      res.json({
+        text: "Play hasn't been programmed yet sorry - try pause, play, volume up or down, or next.",
+        shouldEndSession: true
+      });
     if (json.name == "AMAZON.ResumeIntent")
       itunes.resume(res);
     else if (json.name == "AMAZON.PauseIntent")
@@ -41,9 +46,10 @@ app.get('/', function (req, res) {
       return;
   } catch (e)
   {
-    res.json({
-      text: "There was a problem: " + e.message,
-      shouldEndSession: true
-    });
+      console.error(e);
+        res.json({
+            text: "There was a problem: " + e.message,
+            shouldEndSession: true
+        });
   }
 });
