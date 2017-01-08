@@ -4,7 +4,8 @@
   "description": "Use Alexa to control iTunes via the Remote protocol",
   "main": "server.js",
   "dependencies": {
-    "node-dacp": "git+https://github.com/mikenz1000/node-dacp-client.git"
+    "node-dacp": "git+https://github.com/mikenz1000/node-dacp-client.git",
+    "express": "^4.14.0"
   },
   "devDependencies": {},
   "scripts": {
