@@ -5,7 +5,8 @@
   "main": "server.js",
   "dependencies": {
     "node-dacp": "git+https://github.com/mikenz1000/node-dacp-client.git",
-    "express": "^4.14.0"
+    "express": "^4.14.0",
+    "body-parser": "^1.15.2"
   },
   "devDependencies": {},
   "scripts": {

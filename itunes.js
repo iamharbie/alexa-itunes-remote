@@ -171,25 +171,19 @@ module.exports.resume = function(res)
 
 
 
-module.exports.volumeUp = function(res) {
+module.exports.volumeUp = function(callback) {
     client.sessionRequest('ctrl-int/1/volumeup', {}, function(error, response) {
         // Play or pause
         console.log(error, response);
       });
-    res.json({
-        text: "",
-        shouldEndSession: true
-      });
+    callback();
 };
 
 /* Pause played current song in iTunes */
-module.exports.volumeDown = function(res) {
+module.exports.volumeDown = function(callback) {
     client.sessionRequest('ctrl-int/1/volumedown', {}, function(error, response) {
         // Play or pause
         console.log(error, response);
       });
-    res.json({
-        text: "",
-        shouldEndSession: true
-      });
+    callback();
 };
