@@ -1,0 +1,27 @@
+{
+  "name": "alexa-itunes-remote",
+  "version": "0.0.1",
+  "description": "Use Alexa to control iTunes via the Remote protocol",
+  "main": "server.js",
+  "dependencies": {
+    "node-dacp": "git+https://github.com/mikenz1000/node-dacp-client.git"
+  },
+  "devDependencies": {},
+  "scripts": {
+  },
+
+  "keywords": [
+    "amazon",
+    "echo",
+    "alexa",
+    "voice",
+    "activated",
+    "controlled",
+    "itunes",
+    "remote",
+    "dacp",
+    "daap"
+  ],
+  "author": "Mike Mueller",
+  "license": "MIT"
+}
