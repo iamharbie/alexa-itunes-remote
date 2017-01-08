@@ -29,7 +29,7 @@ client.sessionRequest('ctrl-int/1/playpause', function(error, response) {
 });
 
 
-pause = function(res)
+module.exports.pause = function(res)
 {
   // Get the player's status
   client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
@@ -54,7 +54,7 @@ pause = function(res)
   });
 }
 
-resume = function(res)
+module.exports.resume = function(res)
 {
     // Get the player's status
     client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
@@ -80,6 +80,115 @@ resume = function(res)
 }
 
 // basic test
-testRes = {};
-testRes.json = function() {};
-pause(testRes);
+// testRes = {};
+// testRes.json = function() {};
+// pause(testRes);
+
+
+
+
+
+  //  public void controlVolume(long volume) {
+  //     // http://192.168.254.128:3689/ctrl-int/1/setproperty?dmcp.volume=100.000000&session-id=130883770
+  //     this.fireAction(String.format("%s/ctrl-int/1/setproperty?dmcp.volume=%s&session-id=%s", this.getRequestBase(), volume, this.sessionId), false);
+  //  }
+
+
+module.exports.nextSong = function(res) {
+  client.sessionRequest('ctrl-int/1/nextitem', {}, function(error, response) {
+        // Play or pause
+        console.log(error, response);
+      });
+    res.json({
+        text: "",
+        shouldEndSession: true
+      });
+};
+
+
+module.exports.prevSong = function(res) {
+  client.sessionRequest('ctrl-int/1/previtem', {}, function(error, response) {
+        // Play or pause
+        console.log(error, response);
+      });
+    res.json({
+        text: "",
+        shouldEndSession: true
+      });
+};
+
+
+module.exports.pause = function(res)
+{
+  // Get the player's status
+  client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
+    if (response.caps == 3) {
+      res.json({
+        text: "Already paused",
+        shouldEndSession: true
+      });
+    }
+    else
+    {
+      // playing - send pause request
+      client.sessionRequest('ctrl-int/1/playpause', {}, function(error, response) {
+          // Play or pause
+          console.log(error, response);
+        });
+      res.json({
+          text: "Paused",
+          shouldEndSession: true
+        });
+    }
+  });
+}
+
+module.exports.resume = function(res)
+{
+    // Get the player's status
+    client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
+    if (response.caps == 4) {
+      res.json({
+        text: "Already playing",
+        shouldEndSession: true
+      });
+    }
+    else
+    {
+      // playing - send pause request
+      client.sessionRequest('ctrl-int/1/playpause', {}, function(error, response) {
+          // Play or pause
+          console.log(error, response);
+        });
+      res.json({
+          text: "Playing",
+          shouldEndSession: true
+        });
+    }
+  });
+}
+
+
+
+module.exports.volumeUp = function(res) {
+    client.sessionRequest('ctrl-int/1/volumeup', {}, function(error, response) {
+        // Play or pause
+        console.log(error, response);
+      });
+    res.json({
+        text: "",
+        shouldEndSession: true
+      });
+};
+
+/* Pause played current song in iTunes */
+module.exports.volumeDown = function(res) {
+    client.sessionRequest('ctrl-int/1/volumedown', {}, function(error, response) {
+        // Play or pause
+        console.log(error, response);
+      });
+    res.json({
+        text: "",
+        shouldEndSession: true
+      });
+};
