@@ -172,18 +172,22 @@ module.exports.resume = function(res)
 
 
 module.exports.volumeUp = function(callback) {
-    client.sessionRequest('ctrl-int/1/volumeup', {}, function(error, response) {
-        // Play or pause
-        console.log(error, response);
-      });
+    for (var i = 0;i < 2;i ++)
+    {
+      client.sessionRequest('ctrl-int/1/volumeup', {}, function(error, response) {
+          console.log(error, response);
+        });
+    }
     callback();
 };
 
 /* Pause played current song in iTunes */
 module.exports.volumeDown = function(callback) {
-    client.sessionRequest('ctrl-int/1/volumedown', {}, function(error, response) {
-        // Play or pause
-        console.log(error, response);
-      });
+    for (var i = 0;i < 2;i ++)
+    {
+        client.sessionRequest('ctrl-int/1/volumedown', {}, function(error, response) {
+          console.log(error, response);
+        });
+    }
     callback();
 };

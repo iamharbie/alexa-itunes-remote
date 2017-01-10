@@ -34,7 +34,7 @@ app.post('/', function (req, res) {
       });
     else if (json.name == "AMAZON.ResumeIntent")
       itunes.resume(res);
-    else if (json.name == "AMAZON.PauseIntent")
+    else if (json.name == "AMAZON.PauseIntent" || json.name == "Stop")
       itunes.pause(res);
     else if (json.name == "VolumeUp")
         itunes.volumeUp(
@@ -43,7 +43,7 @@ app.post('/', function (req, res) {
                     text: "More?",
                     shouldEndSession:false,
                     sessionAttributes: { "Repeat": "volumeUp" },
-                    repromptText: ""
+                    repromptText: "Yes or no"
                 });
             });
     else if (json.name == "VolumeDown")
@@ -53,7 +53,7 @@ app.post('/', function (req, res) {
                     text: "More?",
                     shouldEndSession:false,
                     sessionAttributes: { "Repeat": "volumeDown" },
-                    repromptText: ""
+                    repromptText: "Yes or no"
                 });
             });
     else if (json.name == "Yes")
