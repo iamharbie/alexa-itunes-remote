@@ -17,81 +17,142 @@ dns.lookup(require('os').hostname(), function (err, address, fam) {
 app.use(bodyParser.json());
 
 var server = app.listen(port, function () {
-
 });
 
+// intents are registered in this object with key = the intent name from Alexa
+// the function is what will be called with (req.body,res) 
+// (body has .session.attributes and .slots)
+// and will return res.json({text,shouldEndSession,sessionAttributes,repromptText})
+// if sessionAttributes.state is defined, the states are checked first for intents
+// with a fallback to the main intents
+var intents = {}
+
+var states = {}
+
+intents["AMAZON.ResumeIntent"] = 
+intents["Play"] = function(body,res) {
+    itunes.resume(function(error,response){
+        if (error) 
+            res.speak(error);
+        else 
+            res.end();
+    });
+}
+
+intents["AMAZON.PauseIntent"] = 
+intents["Stop"] = function(body,res)
+{
+    itunes.pause(function(error) {
+        if (error) res.speak(error);
+        else res.end();
+    });
+}
+
+intents["Next"] = function(body,res) {
+    itunes.nextSong(function(error) {
+        if (error) res.speak(error);
+        else res.end();
+    });
+}
+
+intents["Previous"] = function(body,res) {
+    itunes.previousSong(function(error) {
+        if (error) res.speak(error);
+        else res.end();
+    });
+}
+   
+intents['VolumeUp'] = function(body,res) {
+    itunes.volumeUp(function(error){
+        if (error) 
+            res.speak(error);
+        else 
+            res.enterState('VolumeUp','More?');
+    })
+}
+states['VolumeUp'] = {
+    // recycle the stateless intent handler
+    'Yes': intents['VolumeUp'],
+    'No': function(body,res) { res.end(); }
+};
+
+intents['VolumeDown'] = function(body,res) {
+    itunes.volumeDown(function(error){
+        if (error) 
+            res.speak(error);
+        else 
+            res.enterState('VolumeDown','More?');
+    })
+}
+states['VolumeDown'] = {
+    // recycle the stateless intent handler
+    'Yes': intents['VolumeDown'],
+    'no': function(body,res) { res.end(); }
+};
+
+intents['PlaySong'] = function(body,res) {
+    res.speak("Play hasn't been programmed yet sorry - try pause, play, volume up or down, or next.");
+};
+
+
+/* Speaker control */
+intents['ListSpeakers'] = function(body,res) {
+    itunes.getSpeakers(function(error,speakers) {
+        if (error) 
+            res.speak(error);
+        else 
+            res.speak("Available speakers are " + speakers.map(function(s) { return s.name; }).join(" "));
+    });
+}
+
+/* Generic Handler */
 app.post('/', function (req, res) {
   try {
-    var url_parts = url.parse(req.url, true);
-    console.log("body",req.body);
-    console.log(url_parts.query);
+    //console.log("body",req.body);
     var json = req.body.intent;
-    
-    if (json.name == "PlaySong")
-      res.json({
-        text: "Play hasn't been programmed yet sorry - try pause, play, volume up or down, or next.",
-        shouldEndSession: true
-      });
-    else if (json.name == "AMAZON.ResumeIntent")
-      itunes.resume(res);
-    else if (json.name == "AMAZON.PauseIntent" || json.name == "Stop")
-      itunes.pause(res);
-    else if (json.name == "VolumeUp")
-        itunes.volumeUp(
-            function() {
-                res.json({
-                    text: "More?",
-                    shouldEndSession:false,
-                    sessionAttributes: { "Repeat": "volumeUp" },
-                    repromptText: "Yes or no"
-                });
+    var resObj = {
+        // simple speech response
+        speak: function(text) {
+            res.json({
+                text: text,
+                shouldEndSession: true
             });
-    else if (json.name == "VolumeDown")
-        itunes.volumeDown(
-            function() {
-                res.json({
-                    text: "More?",
-                    shouldEndSession:false,
-                    sessionAttributes: { "Repeat": "volumeDown" },
-                    repromptText: "Yes or no"
-                });
+        },
+        // silent response
+        end: function() {
+            res.json({
+                text:"",
+                shouldEndSession: true
             });
-    else if (json.name == "Yes")
-    {
-        if (req.body.session.attributes.Repeat)
+        },
+        // response and go to state
+        enterState: function(state,text)
         {
-            itunes[req.body.session.attributes.Repeat](
-                function() {
-                    res.json({
-                        text: "More?",
-                        shouldEndSession:false,
-                        sessionAttributes: { "Repeat": req.body.session.attributes.Repeat },
-                        repromptText: ""
-                    });
-                }
-            )
-        } 
-        else res.json({text: "", shouldEndSession: true })
-    }
-    else if (json.name == "No")
+            res.json({
+                text:text,
+                shouldEndSession: false,
+                sessionAttributes: { state: state }
+            })
+        }
+    };
+    // check for state
+    if (req.body.session && req.body.session.attributes 
+        && req.body.session.attributes.state
+        && states[req.body.session.attributes.state]
+        && states[req.body.session.attributes.state][json.name])
     {
-        res.json({text: "", shouldEndSession: true })
+        // we have a state and an intent to apply within that state
+        states[req.body.session.attributes.state][json.name](req.body,resObj);
     }
-    else if (json.name == "Next")
-        itunes.nextSong(res);
-    
+    else if (intents[json.name])
+    {
+        intents[json.name](req.body,resObj);
+    }
     else
-      res.json({
-        text: "Sorry didn't get that - ask Eedee",
-        shouldEndSession: true
-      }); 
-      return;
+      resObj.speak("Sorry - the " + json.name + " intent is not programmed");
   } catch (e)
   {
       console.error(e);
-        res.json({
-            text: "There was a problem: " + e.message,
-            shouldEndSession: true
-        });
+      resObj.speak("There was a problem: " + e.message);
   }
 });

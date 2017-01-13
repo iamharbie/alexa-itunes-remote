@@ -1,5 +1,5 @@
-//var SERVER = { pair: '09B63545F31CF5C1', serviceName: '4E6D0DFFC6C0CE2F' }; // mikemac
-var SERVER = { pair: 'FEEDB511B2ABFB18', serviceName: '2D64252F6F8B15B1' }; // projector shelf
+var SERVER = { pair: '09B63545F31CF5C1', serviceName: '4E6D0DFFC6C0CE2F' }; // mikemac
+//var SERVER = { pair: 'FEEDB511B2ABFB18', serviceName: '2D64252F6F8B15B1' }; // projector shelf
 
 var client = require('dacp-client')(SERVER);//(SERVER);
 
@@ -21,149 +21,60 @@ client.on('error', function(error) {
 
 client.on('status', function(status) {
     console.log("STATUS", status);
+
+    module.exports.getSpeakers(function(error,s) { console.log(s); });
 });
 
-
-client.sessionRequest('ctrl-int/1/playpause', function(error, response) {
-    // Play or pause
-    console.log(error, response);
-});
-
-
-module.exports.pause = function(res)
-{
-  // Get the player's status
-  client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
-    if (response.caps == 3) {
-      res.json({
-        text: "Already paused",
-        shouldEndSession: true
-      });
-    }
-    else
-    {
-      // playing - send pause request
-      client.sessionRequest('ctrl-int/1/playpause', {}, function(error, response) {
-          // Play or pause
-          console.log(error, response);
-        });
-      res.json({
-          text: "Paused",
-          shouldEndSession: true
-        });
-    }
-  });
-}
-
-module.exports.resume = function(res)
-{
-    // Get the player's status
-    client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
-    if (response.caps == 4) {
-      res.json({
-        text: "Already playing",
-        shouldEndSession: true
-      });
-    }
-    else
-    {
-      // playing - send pause request
-      client.sessionRequest('ctrl-int/1/playpause', {}, function(error, response) {
-          // Play or pause
-          console.log(error, response);
-        });
-      res.json({
-          text: "Playing",
-          shouldEndSession: true
-        });
-    }
-  });
-}
-
-// basic test
-// testRes = {};
-// testRes.json = function() {};
-// pause(testRes);
-
-
-
-
-
-  //  public void controlVolume(long volume) {
-  //     // http://192.168.254.128:3689/ctrl-int/1/setproperty?dmcp.volume=100.000000&session-id=130883770
-  //     this.fireAction(String.format("%s/ctrl-int/1/setproperty?dmcp.volume=%s&session-id=%s", this.getRequestBase(), volume, this.sessionId), false);
-  //  }
-
-
-module.exports.nextSong = function(res) {
+module.exports.nextSong = function(callback) {
   client.sessionRequest('ctrl-int/1/nextitem', {}, function(error, response) {
-        // Play or pause
-        console.log(error, response);
-      });
-    res.json({
-        text: "",
-        shouldEndSession: true
-      });
+  if (error) callback(error);
+    else callback(null);
+  });
 };
 
 
-module.exports.prevSong = function(res) {
+module.exports.previousSong = function(callback) {
   client.sessionRequest('ctrl-int/1/previtem', {}, function(error, response) {
-        // Play or pause
-        console.log(error, response);
-      });
-    res.json({
-        text: "",
-        shouldEndSession: true
-      });
+    if (error) callback(error);
+    else callback(null);
+  });
 };
 
 
-module.exports.pause = function(res)
+module.exports.pause = function(callback)
 {
   // Get the player's status
   client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
-    if (response.caps == 3) {
-      res.json({
-        text: "Already paused",
-        shouldEndSession: true
-      });
-    }
+    if (error) callback(error);
+    else if (response.caps == 3) 
+      callback("Already paused");
     else
     {
       // playing - send pause request
       client.sessionRequest('ctrl-int/1/playpause', {}, function(error, response) {
           // Play or pause
+          callback(null, "Playing");
           console.log(error, response);
-        });
-      res.json({
-          text: "Paused",
-          shouldEndSession: true
         });
     }
   });
 }
 
-module.exports.resume = function(res)
+module.exports.resume = function(callback)
 {
     // Get the player's status
     client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
-    if (response.caps == 4) {
-      res.json({
-        text: "Already playing",
-        shouldEndSession: true
-      });
+    if (error) callback(error);
+    else if (response.caps == 4) {
+      callback("Already playing");
     }
     else
     {
       // playing - send pause request
       client.sessionRequest('ctrl-int/1/playpause', {}, function(error, response) {
           // Play or pause
+          callback(null,"Playing");
           console.log(error, response);
-        });
-      res.json({
-          text: "Playing",
-          shouldEndSession: true
         });
     }
   });
@@ -191,3 +102,48 @@ module.exports.volumeDown = function(callback) {
     }
     callback();
 };
+
+/* Accepts a list of the names of the speakers */
+module.exports.selectSpeakers = function(list)
+{
+  getSpeakers(function(error,speakers){
+    if (error) console.log(error);
+    else {
+      // find the average volume of non-zero volumes
+      var speakersOn = speakers.filter(function(s) { return s.volume > 0; });
+      var averageVolume = 25;
+      if (speakersOn.length > 0)
+        averageVolume = speakersOn.reduce(function(a,b) { return a + b}) / speakersOn.length;
+      
+      // apply
+      speakers.forEach(function(i) {
+        i.setVolume(list.includes(i.name) ? averageVolume : 0);
+      });
+    };
+  });
+}
+
+// response, if no error, is an array of speaker objects
+// with name, setVolume(callback)
+module.exports.getSpeakers = function(callback)
+{
+  client.sessionRequest('ctrl-int/1/getspeakers',{}, function(error, response) {
+    if (error) callback(error)
+    else {
+      var s = response.mdcl.map(function(element){
+        return {
+          name: element.minm,
+          volume: element.cmvo,
+          isActive: element.caia ? true : false,
+          setActive: function(a,callback) {
+            console.log("set active of " + element.minm + " to " + a);
+          },
+          setVolume: function(v,callback) {
+              console.log("set volume of " + element.minm + " to " + v);
+          }
+        };
+      });
+      callback(null,s);
+    }
+  });
+}

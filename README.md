@@ -7,6 +7,8 @@ This is a work in progress. Watch the project, or send me a message and I'll let
 AirPlay Protocol Spec:
 https://nto.github.io/AirPlay.html
 
+Good reference for other less well known daap commands
+https://github.com/jkiddo/jolivia/blob/master/jolivia.dacp/src/main/java/org/dyndns/jkiddo/service/daap/client/RemoteControl.java
 
 (following links only accessible by me)
 
