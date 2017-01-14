@@ -1,5 +1,5 @@
-var SERVER = { pair: '09B63545F31CF5C1', serviceName: '4E6D0DFFC6C0CE2F' }; // mikemac
-//var SERVER = { pair: 'FEEDB511B2ABFB18', serviceName: '2D64252F6F8B15B1' }; // projector shelf
+//var SERVER = { pair: '09B63545F31CF5C1', serviceName: '4E6D0DFFC6C0CE2F' }; // mikemac
+var SERVER = { pair: 'FEEDB511B2ABFB18', serviceName: '2D64252F6F8B15B1' }; // projector shelf
 
 var client = require('dacp-client')(SERVER);//(SERVER);
 
@@ -19,11 +19,26 @@ client.on('error', function(error) {
     console.log("ERROR", error);
 });
 
+var first = false;
 client.on('status', function(status) {
     console.log("STATUS", status);
-
-    module.exports.getSpeakers(function(error,s) { console.log(s); });
+    if (first)
+    {
+          first = false;
+          module.exports.unpair();
+    }
 });
+
+module.exports.unpair = function()
+{
+  client.config.pair = undefined;
+  client.config.serviceName = undefined;
+  client.config.sessionId = undefined;
+  client.status = 'initializing';
+  client._pair(function(error, response) {
+    console.log(error,response);
+  });
+}
 
 module.exports.nextSong = function(callback) {
   client.sessionRequest('ctrl-int/1/nextitem', {}, function(error, response) {
@@ -102,7 +117,6 @@ module.exports.volumeDown = function(callback) {
     }
     callback();
 };
-var qs = require('dacp-client/node_modules/request/lib/querystring.js');
   
 /* Accepts a list of the speakers to enable (as returned by getSpeakers */
 module.exports.setSpeakers = function(list,callback)
@@ -110,13 +124,10 @@ module.exports.setSpeakers = function(list,callback)
   var idString = list.map(function(i) { return (i.id == 0) ? "0" : ("0x"+i.id.toString(16).toUpperCase()) }).join(",");
   console.log(idString);
   
-  var oldSetting = qs.stringifyOptions;
-  qs.stringifyOptions = {encoding:false};
   client.sessionRequest('ctrl-int/1/setspeakers',{'speaker-id':idString}, function(error, response) {
     if (error) callback(error);
     else callback(null);
-  });
-  qs.stringifyOptions = oldSetting;
+  });  
 }
 
 // response, if no error, is an array of speaker objects
