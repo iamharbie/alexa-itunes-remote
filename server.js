@@ -105,6 +105,55 @@ intents['ListSpeakers'] = function(body,res) {
     });
 }
 
+intents['SelectAllSpeakers'] = function(body,res) {
+    itunes.getSpeakers(function(error, speakers) {
+        if (error) res.speak(error);
+        else itunes.setSpeakers(speakers,function(error) {
+            if (error) res.speak(error);
+            else res.end();
+        });
+    });
+}
+
+intents['SelectOneSpeaker'] = function(body,res) {
+    itunes.getSpeakers(function(error, speakers) {
+        if (error) res.speak(error);
+        else 
+        {
+            console.log(body);
+            var speakerOne = body.intent.slots['SpeakerOne'].value.toUpperCase();
+            var search = speakers.filter(function(i) { return i.name.toUpperCase() == speakerOne });
+            if (search.length == 0) res.speak("Did not recognise the speaker " + speakerOne);
+            else 
+                itunes.setSpeakers(search,function(error) {
+                    if (error) res.speak(error);
+                    else res.end();
+                });
+        }
+    });
+}
+
+intents['SelectTwoSpeakers'] = function(body,res) {
+    itunes.getSpeakers(function(error, speakers) {
+        if (error) res.speak(error);
+        else 
+        {
+            console.log(body);
+            var speakerOne = body.intent.slots['SpeakerOne'].value.toUpperCase();
+            var speakerTwo = body.intent.slots['SpeakerTwo'].value.toUpperCase();
+            var search = speakers.filter(function(i) { 
+                return i.name.toUpperCase() == speakerOne ||
+                       i.name.toUpperCase() == speakerTwo });
+            if (search.length != 2) res.speak("Did not recognise the speakers " + speakerOne + " and " + speakerTwo);
+            else 
+                itunes.setSpeakers(search,function(error) {
+                    if (error) res.speak(error);
+                    else res.end();
+                });
+        }
+    });
+}
+
 /* Generic Handler */
 app.post('/', function (req, res) {
   try {

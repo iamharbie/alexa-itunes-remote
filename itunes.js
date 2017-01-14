@@ -102,25 +102,21 @@ module.exports.volumeDown = function(callback) {
     }
     callback();
 };
-
-/* Accepts a list of the names of the speakers */
-module.exports.selectSpeakers = function(list)
+var qs = require('dacp-client/node_modules/request/lib/querystring.js');
+  
+/* Accepts a list of the speakers to enable (as returned by getSpeakers */
+module.exports.setSpeakers = function(list,callback)
 {
-  getSpeakers(function(error,speakers){
-    if (error) console.log(error);
-    else {
-      // find the average volume of non-zero volumes
-      var speakersOn = speakers.filter(function(s) { return s.volume > 0; });
-      var averageVolume = 25;
-      if (speakersOn.length > 0)
-        averageVolume = speakersOn.reduce(function(a,b) { return a + b}) / speakersOn.length;
-      
-      // apply
-      speakers.forEach(function(i) {
-        i.setVolume(list.includes(i.name) ? averageVolume : 0);
-      });
-    };
+  var idString = list.map(function(i) { return (i.id == 0) ? "0" : ("0x"+i.id.toString(16).toUpperCase()) }).join(",");
+  console.log(idString);
+  
+  var oldSetting = qs.stringifyOptions;
+  qs.stringifyOptions = {encoding:false};
+  client.sessionRequest('ctrl-int/1/setspeakers',{'speaker-id':idString}, function(error, response) {
+    if (error) callback(error);
+    else callback(null);
   });
+  qs.stringifyOptions = oldSetting;
 }
 
 // response, if no error, is an array of speaker objects
@@ -130,11 +126,13 @@ module.exports.getSpeakers = function(callback)
   client.sessionRequest('ctrl-int/1/getspeakers',{}, function(error, response) {
     if (error) callback(error)
     else {
+      console.log(response);
       var s = response.mdcl.map(function(element){
         return {
           name: element.minm,
           volume: element.cmvo,
           isActive: element.caia ? true : false,
+          id: element.msma ? element.msma : 0,
           setActive: function(a,callback) {
             console.log("set active of " + element.minm + " to " + a);
           },
