@@ -1,6 +1,6 @@
-//var SERVER = { pair: '09B63545F31CF5C1', serviceName: '4E6D0DFFC6C0CE2F' }; // mikemac
-var SERVER = { pair: 'FEEDB511B2ABFB18', serviceName: '2D64252F6F8B15B1' }; // projector shelf
-
+var nconf = require('nconf');
+var SERVER = nconf.get('SERVER');
+if (!SERVER) SERVER = {};
 var client = require('dacp-client')(SERVER);//(SERVER);
 
 client.on('passcode', function(passcode) {
@@ -13,35 +13,61 @@ client.on('paired', function(serverConfig) {
     // Will look something like this: { pair: '21C22EDCEAD6A892', serviceName: '5380431DD0AFAB75' }
     // The service name will remain constant, even if the server's IP changes
     console.log("SERVER", serverConfig);
+    nconf.set('SERVER',serverConfig);
+    nconf.save();
 });
 
 client.on('error', function(error) {
     console.log("ERROR", error);
 });
 
-var first = false;
+var first = true;
 client.on('status', function(status) {
     console.log("STATUS", status);
     if (first)
     {
           first = false;
-          module.exports.unpair();
+         // module.exports.unpair();
     }
 });
 
-module.exports.unpair = function()
+// login after successful pairing
+client.on('paired', function() {
+  console.log('PAIRED - LOGGING IN');
+  setTimeout(function() {
+    client._login(function(error,response) {
+      console.log('LOGIN CALLBACK ',error,response);
+    });
+  },1000);
+});
+
+module.exports.pair = function(callback)
 {
-  client.config.pair = undefined;
-  client.config.serviceName = undefined;
-  client.config.sessionId = undefined;
-  client.status = 'initializing';
-  client._pair(function(error, response) {
-    console.log(error,response);
+
+  client.once('passcode', function(passcode) {
+    // Provides the 4-digit passcode that must be entered in iTunes
+    console.log("REQUESTED PASSCODE", passcode);
+    callback(null,passcode);
   });
+  client.status = 'initializing';
+  client.config = {
+		serverPort: 3689,
+		subscribe: true
+	};
+  client._pair();
+  nconf.set('SERVER',null);
+  nconf.save();
+
+
+}
+
+module.exports.isPaired = function()
+{
+  return true && nconf.get('SERVER');
 }
 
 module.exports.nextSong = function(callback) {
-  client.sessionRequest('ctrl-int/1/nextitem', {}, function(error, response) {
+  client.sessionRequestIfReady('ctrl-int/1/nextitem', {}, function(error, response) {
   if (error) callback(error);
     else callback(null);
   });
@@ -49,7 +75,7 @@ module.exports.nextSong = function(callback) {
 
 
 module.exports.previousSong = function(callback) {
-  client.sessionRequest('ctrl-int/1/previtem', {}, function(error, response) {
+  client.sessionRequestIfReady('ctrl-int/1/previtem', {}, function(error, response) {
     if (error) callback(error);
     else callback(null);
   });
@@ -59,14 +85,14 @@ module.exports.previousSong = function(callback) {
 module.exports.pause = function(callback)
 {
   // Get the player's status
-  client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
+  client.sessionRequestIfReady('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
     if (error) callback(error);
     else if (response.caps == 3) 
       callback("Already paused");
     else
     {
       // playing - send pause request
-      client.sessionRequest('ctrl-int/1/playpause', {}, function(error, response) {
+      client.sessionRequestIfReady('ctrl-int/1/playpause', {}, function(error, response) {
           // Play or pause
           callback(null, "Playing");
           console.log(error, response);
@@ -78,7 +104,7 @@ module.exports.pause = function(callback)
 module.exports.resume = function(callback)
 {
     // Get the player's status
-    client.sessionRequest('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
+    client.sessionRequestIfReady('ctrl-int/1/playstatusupdate', {'revision-number': 1}, function(error, response) {
     if (error) callback(error);
     else if (response.caps == 4) {
       callback("Already playing");
@@ -86,7 +112,7 @@ module.exports.resume = function(callback)
     else
     {
       // playing - send pause request
-      client.sessionRequest('ctrl-int/1/playpause', {}, function(error, response) {
+      client.sessionRequestIfReady('ctrl-int/1/playpause', {}, function(error, response) {
           // Play or pause
           callback(null,"Playing");
           console.log(error, response);
@@ -100,7 +126,7 @@ module.exports.resume = function(callback)
 module.exports.volumeUp = function(callback) {
     for (var i = 0;i < 2;i ++)
     {
-      client.sessionRequest('ctrl-int/1/volumeup', {}, function(error, response) {
+      client.sessionRequestIfReady('ctrl-int/1/volumeup', {}, function(error, response) {
           console.log(error, response);
         });
     }
@@ -111,20 +137,25 @@ module.exports.volumeUp = function(callback) {
 module.exports.volumeDown = function(callback) {
     for (var i = 0;i < 2;i ++)
     {
-        client.sessionRequest('ctrl-int/1/volumedown', {}, function(error, response) {
+        client.sessionRequestIfReady('ctrl-int/1/volumedown', {}, function(error, response) {
           console.log(error, response);
         });
     }
     callback();
 };
   
+var getSpeakerIdText = function(id)
+{
+  return (id == 0) ? "0" : ("0x"+id.toString(16).toUpperCase());
+}
+
 /* Accepts a list of the speakers to enable (as returned by getSpeakers */
 module.exports.setSpeakers = function(list,callback)
 {
-  var idString = list.map(function(i) { return (i.id == 0) ? "0" : ("0x"+i.id.toString(16).toUpperCase()) }).join(",");
+  var idString = list.map(function(i) { return getSpeakerIdText(i.id); }).join(",");
   console.log(idString);
   
-  client.sessionRequest('ctrl-int/1/setspeakers',{'speaker-id':idString}, function(error, response) {
+  client.sessionRequestIfReady('ctrl-int/1/setspeakers',{'speaker-id':idString}, function(error, response) {
     if (error) callback(error);
     else callback(null);
   });  
@@ -132,27 +163,65 @@ module.exports.setSpeakers = function(list,callback)
 
 // response, if no error, is an array of speaker objects
 // with name, setVolume(callback)
-module.exports.getSpeakers = function(callback)
+module.exports.getSpeakers = function(names,callback,masterVolume)
 {
-  client.sessionRequest('ctrl-int/1/getspeakers',{}, function(error, response) {
+  // capitalise the speaker names if used
+  if (!names) names = [];
+  for (var j = 0;j < names.length;j++)
+    names[j] = names[j].toUpperCase();
+
+  // request master volume (single-level recursion)
+  if (!masterVolume) {
+    client.sessionRequestIfReady('ctrl-int/1/getproperty',
+      {'properties':'dmcp.volume'},
+      function(error,response)
+      {
+        if (error) callback(error);
+        else return module.exports.getSpeakers(names,callback,response.cmvo);
+      }
+    );
+    return;
+  }
+
+  // request the list of speaker data
+  client.sessionRequestIfReady('ctrl-int/1/getspeakers',{}, function(error, response) {
     if (error) callback(error)
     else {
       console.log(response);
-      var s = response.mdcl.map(function(element){
+      var s = response.mdcl
+
+      // filter for the speakers identified in the names array
+      .filter(function(element) { 
+      return (names.length == 0) || (names.indexOf(element.minm.toUpperCase())>= 0);
+      })
+      .map(function(element){
         return {
           name: element.minm,
-          volume: element.cmvo,
+          // the speaker volume is returned as a relative number, but the setVolume
+          // command uses the absolute, so convert to absolute using the master
+          volume: (!element.caia || !element.cmvo)?0:element.cmvo * masterVolume/100,
           isActive: element.caia ? true : false,
-          id: element.msma ? element.msma : 0,
-          setActive: function(a,callback) {
-            console.log("set active of " + element.minm + " to " + a);
-          },
-          setVolume: function(v,callback) {
-              console.log("set volume of " + element.minm + " to " + v);
-          }
+          id: element.msma ? element.msma : 0
         };
       });
-      callback(null,s);
+      if ((names.length > 0) && (names.length != s.length))
+        callback("Didn't find the specifed speaker " + names.join(' and '),s);
+      else 
+        callback(null,s);
     }
   });
+}
+
+// speaker is an element of the array returned by getSpeakers
+module.exports.setSpeakerVolume = function(speaker,v,callback) {
+  if (!speaker.isActive) callback('Speaker not active',null);
+  else { 
+    console.log("set volume of " + speaker.name + " to " + v);
+    client.sessionRequestIfReady('ctrl-int/1/setproperty',
+    { 
+      'dmcp.volume':v,
+      'include-speaker-id':getSpeakerIdText(speaker.id)
+    }
+    ,callback);
+  }
 }

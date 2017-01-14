@@ -1,9 +1,13 @@
 #!/usr/bin/env node
-var itunes = require('./itunes');
 var dns = require('dns');
 var app = (require('express'))();
 var url = require('url');
 var bodyParser = require('body-parser');
+var nconf = require('nconf');
+nconf.file(__dirname + "/config.json");
+
+var itunes = require('./itunes');
+var console = require('./console.js');
 
 var port = 8888;
 var host;
@@ -87,7 +91,7 @@ intents['VolumeDown'] = function(body,res) {
 states['VolumeDown'] = {
     // recycle the stateless intent handler
     'Yes': intents['VolumeDown'],
-    'no': function(body,res) { res.end(); }
+    'No': function(body,res) { res.end(); }
 };
 
 intents['PlaySong'] = function(body,res) {
@@ -97,7 +101,7 @@ intents['PlaySong'] = function(body,res) {
 
 /* Speaker control */
 intents['ListSpeakers'] = function(body,res) {
-    itunes.getSpeakers(function(error,speakers) {
+    itunes.getSpeakers([],function(error,speakers) {
         if (error) 
             res.speak(error);
         else 
@@ -106,7 +110,7 @@ intents['ListSpeakers'] = function(body,res) {
 }
 
 intents['SelectAllSpeakers'] = function(body,res) {
-    itunes.getSpeakers(function(error, speakers) {
+    itunes.getSpeakers([],function(error, speakers) {
         if (error) res.speak(error);
         else itunes.setSpeakers(speakers,function(error) {
             if (error) res.speak(error);
@@ -116,7 +120,7 @@ intents['SelectAllSpeakers'] = function(body,res) {
 }
 
 intents['SelectOneSpeaker'] = function(body,res) {
-    itunes.getSpeakers(function(error, speakers) {
+    itunes.getSpeakers([],function(error, speakers) {
         if (error) res.speak(error);
         else 
         {
@@ -134,7 +138,7 @@ intents['SelectOneSpeaker'] = function(body,res) {
 }
 
 intents['SelectTwoSpeakers'] = function(body,res) {
-    itunes.getSpeakers(function(error, speakers) {
+    itunes.getSpeakers([],function(error, speakers) {
         if (error) res.speak(error);
         else 
         {
@@ -152,6 +156,108 @@ intents['SelectTwoSpeakers'] = function(body,res) {
                 });
         }
     });
+}
+
+var volumeStep = 10;
+
+intents['SpeakerVolumeUp'] = function(body,res) 
+{
+    itunes.getSpeakers([body.intent.slots['SpeakerOne'].value],
+        function(error, speaker) {
+            if (error) res.speak(error);
+            else if (!speaker[0].isActive) res.speak("The " + speaker[0].name + " speaker is not active");
+            else {
+                itunes.setSpeakerVolume(speaker[0], Math.min(100,speaker[0].volume + volumeStep),
+                function(error,response) {
+                    if (error) res.speak(error);
+                    else res.enterState("SpeakerVolumeUp","More?",{
+                        speaker: body.intent.slots['SpeakerOne'].value
+                    })
+                });
+            }
+        });
+}
+
+
+states['SpeakerVolumeUp'] = 
+{ 
+    'Yes': function(body,res) {
+        itunes.getSpeakers([body.session.attributes.speaker],
+            function(error, speaker) {
+                if (error) res.speak(error);
+                else {
+                    itunes.setSpeakerVolume(speaker[0],Math.min(100,speaker[0].volume + volumeStep),
+                    function(error,response) {
+                        if (error) res.speak(error);
+                        else res.enterState("SpeakerVolumeUp","More?",{
+                            speaker:body.session.attributes.speaker
+                        })
+                    });
+                }
+        })
+    },
+    'No': function(body,res) { res.end(); }
+}
+
+intents['SpeakerVolumeDown'] = function(body,res) 
+{
+    itunes.getSpeakers([body.intent.slots['SpeakerOne'].value],
+        function(error, speaker) {
+            if (error) res.speak(error);
+            else if (!speaker[0].isActive) res.speak("The " + speaker[0].name + " speaker is not active");
+            else {
+                itunes.setSpeakerVolume(speaker[0], Math.min(100,speaker[0].volume - volumeStep),
+                function(error,response) {
+                    if (error) res.speak(error);
+                    else res.enterState("SpeakerVolumeDown","More?",{
+                        speaker: body.intent.slots['SpeakerOne'].value
+                    })
+                });
+            }
+        });
+}
+
+states['SpeakerVolumeDown'] = 
+{ 
+    'Yes': function(body,res) {
+        itunes.getSpeakers([body.session.attributes.speaker],
+            function(error, speaker) {
+                if (error) res.speak(error);
+                else {
+                    itunes.setSpeakerVolume(speaker[0],Math.max(0,speaker[0].volume - volumeStep),
+                    function(error,response) {
+                        if (error) res.speak(error);
+                        else res.enterState("SpeakerVolumeDown","More?",{
+                            speaker:body.session.attributes.speaker
+                        })
+                    });
+                }
+        })
+    },
+    'No': function(body,res) { res.end(); }
+}
+
+states['PairConfirm'] = {
+    'Yes': function(body,res) {
+        itunes.pair(function(error,passcode) {
+            if (error) res.speak(error);
+            else {
+                res.speak("Enter the passcode " + passcode + " in iTunes or whichever DACP compliant music player you are using");
+            }
+        });
+    },
+    'No': function(body,res) {
+        res.end();
+    }
+}
+
+intents['Pair'] = function(body,res)
+{
+    if (itunes.isPaired())
+    {
+        res.enterState("PairConfirm", "I believe I am already paired - are you sure you would like to unpair and pair again?");
+    }
+    else states['PairConfirm']['Yes'](body,res);
 }
 
 /* Generic Handler */
@@ -175,12 +281,14 @@ app.post('/', function (req, res) {
             });
         },
         // response and go to state
-        enterState: function(state,text)
+        enterState: function(state,text,attributes)
         {
+            if (!attributes) attributes = {};
+            attributes.state = state;
             res.json({
                 text:text,
                 shouldEndSession: false,
-                sessionAttributes: { state: state }
+                sessionAttributes: attributes
             })
         }
     };
