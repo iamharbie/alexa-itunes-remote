@@ -1,0 +1,44 @@
+VolumeUp to turn it up
+VolumeUp to turn the volume up
+VolumeUp to make it louder
+VolumeUp volume up
+VolumeUp louder
+VolumeDown to turn it down
+VolumeDown to turn the volume down
+VolumeDown to make it quieter
+VolumeDown volume down
+VolumeDown quieter
+Next play next
+Next play the next song
+Next to skip this song
+Previous to play the previous song
+Previous previous
+Yes yes
+No no
+Stop stop
+Stop stop playing
+Stop stop playing the music
+SpeakerVolumeUp to turn it up in the {SpeakerOne}
+SpeakerVolumeUp to make it louder in the {SpeakerOne}
+SpeakerVolumeUp to make the {SpeakerOne} louder
+SpeakerVolumeUp to turn up the {SpeakerOne} speaker
+SelectOneSpeaker to play in the {SpeakerOne} 
+SelectOneSpeaker to play in the {SpeakerOne} only
+SelectOneSpeaker to play through the {SpeakerOne} 
+SelectOneSpeaker to play through the {SpeakerOne} only
+SelectOneSpeaker to select the {SpeakerOne} speaker
+SelectOneSpeaker to select the {SpeakerOne} speaker only
+SelectTwoSpeakers to play in the {SpeakerOne} and {SpeakerTwo}
+SelectTwoSpeakers to play through the {SpeakerOne} and {SpeakerTwo}
+SelectTwoSpeakers to play through the {SpeakerOne} and {SpeakerTwo} speakers
+SelectTwoSpeakers to select the {SpeakerOne} and {SpeakerTwo} speakers
+SelectAllSpeakers to play in all rooms
+SelectAllSpeakers to play through all speakers
+ListSpeakers to list the speakers
+ListSpeakers what speakers are there
+Play to play
+Play to start playing
+Play play
+Pair to pair
+Pair to pair with iTunes
+
