@@ -7,7 +7,7 @@ var nconf = require('nconf');
 nconf.file(__dirname + "/config.json");
 
 var itunes = require('./itunes');
-var console = require('./console.js');
+var consolecontrol = require('./consolecontrol.js');
 
 var port = 8888;
 var host;
