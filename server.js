@@ -1,4 +1,16 @@
-#!/usr/bin/env node
+/**
+ * This is the skill server itself, which responds to requests from the lambda function to control itunes
+ * 
+ * The intents object stores the intents, keyed by the Amazon intent name. value is a function(body,res)
+ * The states object is keyed by a state identifier and each value is the set of intents that can be 
+ * handled in that state.
+ * 
+ * The res callback has methods for the various things a handler could do
+ *   speak(message) - say something back to the user via the Echo
+ *   end() - silent response
+ *   enterState(state,text,attributes) - specify that we are now in the 'state' state
+ */
+
 var dns = require('dns');
 var app = (require('express'))();
 var url = require('url');

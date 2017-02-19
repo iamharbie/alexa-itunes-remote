@@ -1,12 +1,14 @@
+/**
+ * Control iTunes using the exported methods in this module
+ * 
+ * To pair call the pair(callback) function - you'll receive the passcode as the parameter to the
+ * callback. That has to be typed into iTunes.
+ * 
+ */
 var nconf = require('nconf');
 var SERVER = nconf.get('SERVER');
 if (!SERVER) SERVER = {};
-var client = require('dacp-client')(SERVER);//(SERVER);
-
-client.on('passcode', function(passcode) {
-    // Provides the 4-digit passcode that must be entered in iTunes
-    console.log("PASSCODE", passcode);
-});
+var client = require('dacp-client')(SERVER);
 
 client.on('paired', function(serverConfig) {
     // Save the serverConfig object, and pass it in as config for future requests
@@ -21,19 +23,12 @@ client.on('error', function(error) {
     console.log("ERROR", error);
 });
 
-var first = true;
-client.on('status', function(status) {
-    console.log("STATUS", status);
-    if (first)
-    {
-          first = false;
-         // module.exports.unpair();
-    }
-});
-
 // login after successful pairing
 client.on('paired', function() {
   console.log('PAIRED - LOGGING IN');
+
+  // we seem to need a short delay before we try to login after pairing otherwise the login fails
+  // i.e. iTunes isn't ready if we do it too quickly
   setTimeout(function() {
     client._login(function(error,response) {
       console.log('LOGIN CALLBACK ',error,response);
@@ -43,27 +38,29 @@ client.on('paired', function() {
 
 module.exports.pair = function(callback)
 {
-
+  // register the handler to get the passcode
   client.once('passcode', function(passcode) {
     // Provides the 4-digit passcode that must be entered in iTunes
     console.log("REQUESTED PASSCODE", passcode);
     callback(null,passcode);
   });
+
+  // reset the dacp client
   client.status = 'initializing';
   client.config = {
 		serverPort: 3689,
 		subscribe: true
 	};
   client._pair();
+
+  // clear any existing pairing
   nconf.set('SERVER',null);
   nconf.save();
-
-
 }
 
 module.exports.isPaired = function()
 {
-  return true && nconf.get('SERVER');
+  return nconf.get('SERVER');
 }
 
 module.exports.nextSong = function(callback) {
@@ -73,14 +70,12 @@ module.exports.nextSong = function(callback) {
   });
 };
 
-
 module.exports.previousSong = function(callback) {
   client.sessionRequestIfReady('ctrl-int/1/previtem', {}, function(error, response) {
     if (error) callback(error);
     else callback(null);
   });
 };
-
 
 module.exports.pause = function(callback)
 {
@@ -121,8 +116,6 @@ module.exports.resume = function(callback)
   });
 }
 
-
-
 module.exports.volumeUp = function(callback) {
     for (var i = 0;i < 2;i ++)
     {
@@ -133,7 +126,6 @@ module.exports.volumeUp = function(callback) {
     callback();
 };
 
-/* Pause played current song in iTunes */
 module.exports.volumeDown = function(callback) {
     for (var i = 0;i < 2;i ++)
     {
