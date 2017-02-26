@@ -1,29 +1,24 @@
 /**
- * Some entrypoints to allow control via stdin (mainly for testing but in the future
- * possibly for pairing the server with the lambda function)
+ * Haven't done a UI for this app yet so this is just a simple console interface to allow the 
+ * user to trigger the app pairing process
  */
 var itunes = require('./itunes.js');
 var util = require('util');
- process.stdin.resume();
-  process.stdin.setEncoding('utf8');
+var ipnotify = require('./ipnotify');
 
-  process.stdin.on('data', function (text) {
-    console.log('received data:', util.inspect(text));
+process.stdin.resume();
+process.stdin.setEncoding('utf8');
+console.log('To pair with Alexa, enter p123456 and press enter, where 123456 is the app pair code you get from Alexa (Alexa, ask iTunes to pair with the app)');
+process.stdin.on('data', function (text) {
+  console.log('received data:', util.inspect(text));
 
-    if (text === 'p\n') {
-      itunes.resume(function(error,response) {
-          console.log('resume ',error,response);
-      });
-    }
+  if (text[0] == 'p')
+  {
+    ipnotify.pair(text.substring(1).trim());
+    console.log('pair request sent..');
+  }
 
-    if (text === 'c\n') {
-      itunes.pair(function(error,response) {
-          console.log('pair(connect) ',error,response);
-      });
-    }
-
-
-    if (text === 'quit\n') {
-      done();
-    }
-  });
+  if (text === 'quit\n') {
+    done();
+  }
+});

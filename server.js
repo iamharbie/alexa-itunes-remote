@@ -20,6 +20,7 @@ nconf.file(__dirname + "/config.json");
 
 var itunes = require('./itunes');
 var consolecontrol = require('./consolecontrol.js');
+var ipnotify = require('./ipnotify');
 
 var port = 8888;
 var host;

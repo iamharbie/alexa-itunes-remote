@@ -3,16 +3,25 @@
   "version": "0.0.1",
   "description": "Use Alexa to control iTunes via the Remote protocol",
   "main": "server.js",
+  "repository": {
+    "url":"https://github.com/mikenz1000/alexa-itunes-remote"
+  },
   "dependencies": {
     "node-dacp": "git+https://github.com/mikenz1000/node-dacp-client.git",
     "express": "^4.14.0",
     "body-parser": "^1.15.2",
-    "nconf": "^0.8.4"
+    "nconf": "^0.8.4",
+    "wemore": "^0.3.0",
+    "node-uuid": "^1.4.7",
+    "debug": "^2.6.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "dynamodb-doc": "1.0.0",
+    "mocha": "3.2.0",
+    "aws-sdk": "2.20.0"
+  },
   "scripts": {
   },
-
   "keywords": [
     "amazon",
     "echo",
