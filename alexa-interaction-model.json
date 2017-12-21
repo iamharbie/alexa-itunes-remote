@@ -1,83 +1,86 @@
-{  
-   "intents":[  
-      {  
-         "intent":"AMAZON.ResumeIntent"
+{
+    "intents": [
+      {
+        "intent": "AMAZON.ResumeIntent"
       },
-      {  
-         "intent":"AMAZON.PauseIntent"
+      {
+        "intent": "AMAZON.PauseIntent"
       },
-      {  
-         "intent":"VolumeUp"
+      {
+        "intent": "VolumeUp"
       },
-      {  
-         "intent":"VolumeDown"
+      {
+        "intent": "VolumeDown"
       },
-      {  
-         "intent":"Next"
+      {
+        "intent": "Next"
       },
-      {  
-         "intent":"Previous"
+      {
+        "intent": "Previous"
       },
-      {  
-         "intent":"Yes"
+      {
+        "intent": "Yes"
       },
-      {  
-         "intent":"No"
+      {
+        "intent": "No"
       },
-      {  
-         "intent":"Stop"
+      {
+        "intent": "Stop"
       },
-      {  
-         "intent":"Play"
+      {
+        "intent": "Play"
       },
-      {  
-         "intent":"Pair"
+      {
+        "intent": "PairiTunes"
       },
-      {  
-         "intent":"ListSpeakers"
+      {
+        "intent": "PairApp"
       },
-      {  
-         "intent":"SelectOneSpeaker",
-         "slots":[  
-            {  
-               "name":"SpeakerOne",
-               "type":"SpeakerList"
-            }
-         ]
+      {
+        "intent": "ListSpeakers"
       },
-      {  
-         "intent":"SpeakerVolumeUp",
-         "slots":[  
-            {  
-               "name":"SpeakerOne",
-               "type":"SpeakerList"
-            }
-         ]
+      {
+        "slots": [
+          {
+            "name": "SpeakerOne",
+            "type": "SpeakerList"
+          }
+        ],
+        "intent": "SelectOneSpeaker"
       },
-      {  
-         "intent":"SpeakerVolumeDown",
-         "slots":[  
-            {  
-               "name":"SpeakerOne",
-               "type":"SpeakerList"
-            }
-         ]
+      {
+        "slots": [
+          {
+            "name": "SpeakerOne",
+            "type": "SpeakerList"
+          }
+        ],
+        "intent": "SpeakerVolumeUp"
       },
-      {  
-         "intent":"SelectTwoSpeakers",
-         "slots":[  
-            {  
-               "name":"SpeakerOne",
-               "type":"SpeakerList"
-            },
-            {  
-               "name":"SpeakerTwo",
-               "type":"SpeakerList"
-            }
-         ]
+      {
+        "slots": [
+          {
+            "name": "SpeakerOne",
+            "type": "SpeakerList"
+          }
+        ],
+        "intent": "SpeakerVolumeDown"
       },
-      {  
-         "intent":"SelectAllSpeakers"
+      {
+        "slots": [
+          {
+            "name": "SpeakerOne",
+            "type": "SpeakerList"
+          },
+          {
+            "name": "SpeakerTwo",
+            "type": "SpeakerList"
+          }
+        ],
+        "intent": "SelectTwoSpeakers"
+      },
+      {
+        "intent": "SelectAllSpeakers"
       }
-   ]
-}
+    ]
+  }

@@ -39,6 +39,6 @@ ListSpeakers what speakers are there
 Play to play
 Play to start playing
 Play play
-Pair to pair
-Pair to pair with iTunes
-
+PairApp to pair with the app
+PairiTunes to pair with iTunes
+PairiTunes to pair with the player

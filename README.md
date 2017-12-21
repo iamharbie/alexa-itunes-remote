@@ -3,7 +3,8 @@ Node server to control iTunes in response to Alexa commands, just like iTunes Re
 
 Supports commands like...
 
-    Alexa, ask iTunes to pair
+    Alexa, ask iTunes to pair with the app (do this first and type the PIN into the server.js console)
+    Alexa, ask iTunes to pair with iTunes (do this second and type the code into iTunes)
     Alexa, ask iTunes to turn the volume up / make it louder
     Alexa, ask iTunes to skip to the next song
     Alexa, ask iTunes to turn up the Bedroom speaker
@@ -11,7 +12,7 @@ Supports commands like...
     Alexa, ask iTunes to select the Bedroom and Computer speakers
     Alexa, ask iTunes to play in all rooms
 
-The obvious ommission is "Alexa, ask iTunes to play songs by (insert artist name)" etc - there are no docs on how to search the iTunes library so I have to reverse engineer this one.  May have it running soon though.
+The obvious ommission is "Alexa, ask iTunes to play songs by (insert artist name)" etc - there are no docs on how to search the iTunes library so I have to reverse engineer this one.  Now just to find the spare time...
 
 # Setup
 You need to run this node application on a computer on the same network as the iTunes you want to control
