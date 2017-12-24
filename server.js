@@ -264,7 +264,7 @@ states['PairConfirm'] = {
     }
 }
 
-intents['Pair'] = function(body,res)
+intents['PairiTunes'] = function(body,res)
 {
     if (itunes.isPaired())
     {
